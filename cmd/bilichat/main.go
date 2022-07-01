@@ -1,32 +1,28 @@
 package main
 
 import (
-	"fmt"
-	"github.com/Hami-Lemon/bilichat"
 	"os"
 	"os/signal"
-	"strings"
+
+	"github.com/Hami-Lemon/bilichat"
 )
 
 func main() {
-	reader := strings.NewReader(`rooms:
-  - 6
-database:
-  user: 'carol'
-  password: 'mysqlcarol'
-  address: 'localhost'
-  port: 3306
-  dbname: 'live_info'
-log:
-  level: 'debug'
-  appender: 'console'
-`)
-	con, _ := bilichat.ReadConfig(reader)
+	//读取设置文件
+	configReader, err := os.Open("./setting.yaml")
+	if err != nil {
+		panic(err)
+	}
+	con, err := bilichat.ReadConfig(configReader)
+	if err != nil {
+		panic(err)
+	}
+	_ = configReader.Close()
 	monitor := bilichat.NewMonitor(con)
 	monitor.Start()
 	defer monitor.Stop()
+
 	ch := make(chan os.Signal)
 	signal.Notify(ch, os.Kill, os.Interrupt)
 	<-ch
-	fmt.Printf("exit\n")
 }

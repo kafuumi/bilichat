@@ -1,0 +1,17 @@
+rooms: # 监控的房间号
+  - 22625025 # a
+  - 22632424 # b
+  - 22634198 # c
+  - 22637261 # d
+  - 22625027 # e
+  - 2450440 # 33
+database:
+  name: "mysql" # 使用的的数据库，可选：mysql, mongodb
+  user: "carol" # 用户名
+  password: "mysqlcarol"
+  address: "localhost"
+  port: 3306
+  dbname: "live_info"
+log:
+  level: "info" # 可选：debug,info,warn,error
+  appender: "file" # 可选：file, console

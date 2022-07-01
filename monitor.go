@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	logFileSize    = 1024 * 512
+	logFileSize    = 1024 * 128
 	danMuMsgBufCap = 256
 )
 
