@@ -2,6 +2,6 @@
 <project version="4">
   <component name="SqlDialectMappings">
     <file url="file://$PROJECT_DIR$/dao.go" dialect="MySQL" />
-    <file url="file://$PROJECT_DIR$/mysql/create.sql" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/mysql.go" dialect="MySQL" />
   </component>
 </project>

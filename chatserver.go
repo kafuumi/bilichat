@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Hami-Lemon/bilichat/logger"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -13,16 +14,17 @@ import (
 )
 
 const (
-	chanBufSize = 32
+	chanBufSize = 64
 )
 
 type ChatServer struct {
-	room  Room //对应的直播间
-	host  string
-	port  int
-	token string
-	conn  *websocket.Conn //websocket链接
-	msgCh chan []byte     //收到的数据包，已经过解压、拆包
+	room   Room //对应的直播间
+	host   string
+	port   int
+	token  string
+	conn   *websocket.Conn //websocket链接
+	msgCh  chan []byte     //收到的数据包，已经过解压、拆包
+	logger *logger.Logger
 }
 
 // getter
@@ -77,21 +79,24 @@ func (c *ChatServer) Disconnect() {
 	_ = c.conn.Close()
 }
 
+//流水线模型 handle ==> unpackMsg ==> ReceiveMsg
 func (c *ChatServer) handle() {
 	unpackCh := make(chan []byte, chanBufSize)
 	go c.unpackMsg(unpackCh)
 	for {
 		_, buf, err := c.conn.ReadMessage()
 		if err != nil {
-			if _, ok := err.(*websocket.CloseError); ok {
+			if buf == nil {
 				close(unpackCh)
 				break
+			} else {
+				c.logger.Error("读取websocket消息失败, %v", err)
 			}
 		}
 		select {
 		case unpackCh <- buf:
 		default:
-			fmt.Printf("unpackCh block")
+			c.logger.Warn("读取消息 ==> 解包数据包，阻塞！")
 		}
 	}
 }
@@ -107,7 +112,7 @@ func (c *ChatServer) unpackMsg(in <-chan []byte) {
 			select {
 			case c.msgCh <- packet:
 			default:
-				fmt.Printf("c.msgCh block")
+				c.logger.Warn("unpackMsg ==> ReceiveMsg，阻塞！")
 			}
 		}
 	}
@@ -115,7 +120,6 @@ func (c *ChatServer) unpackMsg(in <-chan []byte) {
 
 // ReceiveMsg 解析消息,将获取到的消息写入到 out 中
 func (c *ChatServer) ReceiveMsg(out chan<- Message) {
-	blockNum := 0
 	for {
 		srcMsg, ok := <-c.msgCh
 		if !ok {
@@ -127,8 +131,7 @@ func (c *ChatServer) ReceiveMsg(out chan<- Message) {
 			select {
 			case out <- msg:
 			default:
-				blockNum++
-				fmt.Printf("msg out block, times:%d\n", blockNum)
+				c.logger.Warn("ReceiveMsg ==> out，阻塞！type: %s", msg.MsgType())
 			}
 		}
 	}
@@ -147,16 +150,14 @@ func (c *ChatServer) verify() error {
 	body, _ := json.Marshal(verifyMsg)
 	err := c.conn.WriteMessage(websocket.BinaryMessage, pack(verPlain, opEnterRoom, body))
 	if err != nil {
+		c.logger.Error("发送验证信息失败！%v", err)
 		return err
 	}
 
 	//读取服务端回传的消息，判断是否成功进入直播间，如果进入失败，服务端会断开连接
 	_, buf, err := c.conn.ReadMessage()
 	if err != nil {
-		if _, ok := err.(*websocket.CloseError); ok {
-			//链接被断开，进入直播间失败
-			return ErrVerify
-		}
+		c.logger.Error("读取验证信息回响失败,进入失败！%v", err)
 		return err
 	}
 	op, body := unpackPacket(buf)
@@ -174,11 +175,13 @@ func (c *ChatServer) heartbeat() {
 	heartbeatPacket := []byte{0x52, 0x33, 0x52, 0x33, 0x52, 0x33, 0x52, 0x33, 0x52, 0x33, 0x52, 0x33, 0x52, 0x33}
 	err := c.conn.WriteMessage(websocket.BinaryMessage, pack(verInt, opHeartbeat, heartbeatPacket))
 	if err != nil {
+		c.logger.Error("发送心跳包失败！%v", err)
 		return
 	}
 	for range ticker.C {
 		err = c.conn.WriteMessage(websocket.BinaryMessage, pack(verInt, opHeartbeat, heartbeatPacket))
 		if err != nil {
+			c.logger.Error("发送心跳包失败！%v", err)
 			break
 		}
 	}
@@ -201,8 +204,9 @@ func GetChatServer(roomId int) (*ChatServer, error) {
 		return nil, err
 	}
 	c := &ChatServer{
-		room:  r,
-		msgCh: make(chan []byte, chanBufSize),
+		room:   r,
+		msgCh:  make(chan []byte, chanBufSize),
+		logger: logger.New("chat-"+r.Liver.Uname, logLevel, logAppender),
 	}
 	data := resp.Get("data")
 	c.token = data.Get("token").String()

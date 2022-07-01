@@ -3,16 +3,15 @@ package logger
 import (
 	"bufio"
 	"fmt"
-	"github.com/Hami-Lemon/bobo-bot/util"
 	"io"
+	"log"
 	"os"
 	"sync"
 	"time"
 )
 
-const (
-	bufSize = 1024 * 4 //日志文件的缓冲区大小
-)
+const bufSize = 1024 * 4 //日志文件的缓冲区大小
+var l = log.New(os.Stdout, "[Error]logger ", log.LstdFlags)
 
 //Appender 负责将日志内容写入指定的目的地，目的地可以是标准输出，也可以是文件
 type Appender interface {
@@ -71,7 +70,9 @@ func (f *FileAppender) Write(p []byte) (int, error) {
 		f.logFile()
 	}
 	wn, err := f.writer.Write(p)
-	util.IsError(err, "write log fail!")
+	if err != nil {
+		l.Printf("write log msg fail! %v\n", err)
+	}
 	f.nowSize += wn
 	return wn, err
 }
@@ -90,12 +91,14 @@ func (f *FileAppender) logFile() {
 	//logs 目录不存在，则创建
 	if err != nil && os.IsNotExist(err) {
 		err = os.Mkdir("./logs", os.ModePerm)
-		if util.IsError(err, "crate logs dir fail!") {
+		if err != nil {
+			l.Printf("create log dir fail! %v\n", err)
 			return
 		}
 		file, err = os.Create(name)
 	}
-	if util.IsError(err, "open file fail!") {
+	if err != nil {
+		l.Printf("create log file fail! %v\n", err)
 		return
 	}
 	if f.file != nil {

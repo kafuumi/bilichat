@@ -8,9 +8,7 @@ import (
 
 type Message interface {
 	MsgType() string
-	Raw() []byte
 	setCmd(cmd string)
-	setRaw([]byte)
 }
 
 func parseMsg(src []byte) Message {
@@ -32,11 +30,11 @@ func parseMsg(src []byte) Message {
 	case CmdSuperChatMessage:
 		msg = parseSuperChatMessage(&result)
 	case CmdSendGift, CmdComboSend:
-		msg = parseGiftMessage(&result)
+		msg = parseGiftMessage(&result, cmd)
 	case CmdUserToastMsg:
 		msg = parseGuardMessage(&result)
 	case CmdInteractWord, CmdEntryEffect:
-		msg = parseEntryMessage(&result)
+		msg = parseEntryMessage(&result, cmd)
 	case CmdRoomRealTimeMessageUpdate:
 		msg = parseRoomFansMessage(&result)
 	case CmdOnlineRankCount:
@@ -44,7 +42,7 @@ func parseMsg(src []byte) Message {
 	case CmdHotRankChanged:
 		msg = parseHotRankMessage(&result)
 	case CmdLive, CmdPreparing:
-		msg = parseLiveStatusMessage(&result)
+		msg = parseLiveStatusMessage(&result, cmd)
 	case CmdRoomChange:
 		msg = parseRoomChangeMessage(&result)
 	case CmdWatchedChange:
@@ -55,19 +53,12 @@ func parseMsg(src []byte) Message {
 	}
 	if msg != nil {
 		msg.setCmd(cmd)
-		msg.setRaw(body)
-	} else {
-		msg = &BaseMessage{
-			Cmd:     cmd,
-			content: body,
-		}
 	}
 	return msg
 }
 
 type BaseMessage struct {
 	Cmd       string //原始的cmd内容
-	content   []byte //原始数据
 	Timestamp int64  //发送的时间戳，单位秒
 }
 
@@ -75,16 +66,8 @@ func (r *BaseMessage) MsgType() string {
 	return r.Cmd
 }
 
-func (r *BaseMessage) Raw() []byte {
-	return r.content
-}
-
 func (r *BaseMessage) setCmd(c string) {
 	r.Cmd = c
-}
-
-func (r *BaseMessage) setRaw(raw []byte) {
-	r.content = raw
 }
 
 //粉丝牌信息
@@ -145,9 +128,9 @@ type SuperChatMessage struct {
 	BaseMessage
 	medal
 	user
-	LiveLevel int    //sc发送者的直播等级
-	Text      string //sc内容
-	Price     int    //sc价格
+	LiveLevel int     //sc发送者的直播等级
+	Text      string  //sc内容
+	Price     float32 //sc价格
 }
 
 func parseSuperChatMessage(src *gjson.Result) *SuperChatMessage {
@@ -169,7 +152,7 @@ func parseSuperChatMessage(src *gjson.Result) *SuperChatMessage {
 	sc.LiveLevel = int(userInfo.Get("user_level").Int())
 
 	sc.Text = data.Get("message").String()
-	sc.Price = int(data.Get("price").Int())
+	sc.Price = float32(data.Get("price").Float())
 	return sc
 }
 
@@ -178,23 +161,23 @@ type GiftMessage struct {
 	BaseMessage
 	medal
 	user
-	GiftId   int    //礼物id
-	GiftName string //礼物名称
-	Price    int    //礼物价格，如果是连击则是总价值
-	Num      int    //数量
+	GiftId   int     //礼物id
+	GiftName string  //礼物名称
+	Price    float32 //礼物价格，如果是连击则是总价值
+	Num      int     //数量
 }
 
-func parseGiftMessage(src *gjson.Result) *GiftMessage {
+func parseGiftMessage(src *gjson.Result, cmd string) *GiftMessage {
 	gm := &GiftMessage{}
 	data := src.Get("data")
-	isCombo := strings.Compare(gm.Cmd, CmdComboSend) == 0
+	isCombo := strings.Compare(cmd, CmdComboSend) == 0
 	if isCombo {
 		gm.Timestamp = time.Now().Unix() //连击礼物消息中不含有时间戳信息，用当前时间代替
 	} else {
 		gm.Timestamp = data.Get("timestamp").Int()
 	}
 
-	medalInfo := src.Get("medal_info")
+	medalInfo := data.Get("medal_info")
 	if medalInfo.Exists() {
 		gm.MedalLevel = int(medalInfo.Get("medal_level").Int())
 		gm.MedalName = medalInfo.Get("medal_name").String()
@@ -207,12 +190,12 @@ func parseGiftMessage(src *gjson.Result) *GiftMessage {
 	if isCombo {
 		gm.GiftId = int(data.Get("gift_id").Int())
 		gm.GiftName = data.Get("gift_name").String()
-		gm.Price = int(data.Get("combo_total_coin").Int()) / 1000
+		gm.Price = float32(data.Get("combo_total_coin").Float()) / 1000.0
 		gm.Num = int(data.Get("total_num").Int())
 	} else {
 		gm.GiftId = int(data.Get("giftId").Int())
 		gm.GiftName = data.Get("giftName").String()
-		gm.Price = int(data.Get("price").Int()) / 1000
+		gm.Price = float32(data.Get("price").Float()) / 1000.0
 		gm.Num = int(data.Get("num").Int())
 	}
 	return gm
@@ -222,8 +205,8 @@ func parseGiftMessage(src *gjson.Result) *GiftMessage {
 type GuardMessage struct {
 	BaseMessage
 	user
-	Name  string //舰长，提督，总督
-	Price int    //价格
+	Name  string  //舰长，提督，总督
+	Price float32 //价格
 }
 
 func parseGuardMessage(src *gjson.Result) *GuardMessage {
@@ -235,7 +218,7 @@ func parseGuardMessage(src *gjson.Result) *GuardMessage {
 	gm.Uid = data.Get("uid").Int()
 	gm.Uname = data.Get("username").String()
 	gm.Name = data.Get("role_name").String()
-	gm.Price = int(data.Get("price").Int()) / 1000
+	gm.Price = float32(data.Get("price").Float()) / 1000.0
 	return gm
 }
 
@@ -246,15 +229,18 @@ type EntryMessage struct {
 	medal
 }
 
-func parseEntryMessage(src *gjson.Result) *EntryMessage {
+func parseEntryMessage(src *gjson.Result, cmd string) *EntryMessage {
 	em := &EntryMessage{}
 
 	data := src.Get("data")
-	isEffect := strings.Compare(em.Cmd, CmdEntryEffect) == 0
+	isEffect := strings.Compare(cmd, CmdEntryEffect) == 0
 	if isEffect {
 		em.Timestamp = time.Now().Unix()                         //舰长进场消息不含有时间戳信息，使用当前时间
 		copyWriting := []rune(data.Get("copy_writing").String()) //uname也没有,只能从这里面提取
-		em.Uname = string(copyWriting[7 : len(copyWriting)-8])
+		l := len(copyWriting)
+		if l >= 15 {
+			em.Uname = string(copyWriting[7 : l-8])
+		}
 	} else {
 		em.Timestamp = data.Get("timestamp").Int()
 		em.Uname = data.Get("uname").String()
@@ -324,9 +310,9 @@ type LiveStatusMessage struct {
 	Status bool //true为开播，false为下播
 }
 
-func parseLiveStatusMessage(src *gjson.Result) *LiveStatusMessage {
+func parseLiveStatusMessage(src *gjson.Result, cmd string) *LiveStatusMessage {
 	lsm := &LiveStatusMessage{}
-	cmd := src.Get("cmd").String()
+
 	lsm.Timestamp = time.Now().Unix()
 	lsm.Status = strings.Compare(cmd, "LIVE") == 0
 	return lsm

@@ -42,7 +42,7 @@ create table sc_msg
     user_name   varchar(64),                    -- 该sc发送者的昵称
     live_level  int,                            -- 直播等级
     sc_text     text,                           -- sc的内容
-    price       int                             -- sc的价格
+    price       float(10, 2)                    -- sc的价格
 );
 
 # 礼物消息
@@ -63,7 +63,7 @@ create table gift_msg
     user_name   varchar(64),                    -- 该礼物发送者的昵称
     gift_id     int,                            -- 礼物id
     gift_name   varchar(64),                    -- 礼物名称
-    price       int,                            -- 礼物总价格
+    price       float(10, 2),                   -- 礼物总价格
     num         int                             -- 礼物数量
 );
 
@@ -81,7 +81,7 @@ create table guard_msg
     user_uid    bigint,                         -- uid
     user_name   varchar(64),                    -- 昵称
     name        varchar(64),                    -- 类型：舰长，提督，总督
-    price       int                             -- 价格
+    price       float(10, 2)                    -- 价格
 );
 
 # 进场消息
