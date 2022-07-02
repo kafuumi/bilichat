@@ -47,8 +47,10 @@ func (f *FileAppender) Close() {
 	defer f.lock.Unlock()
 
 	f.isClose = true
-	_ = f.writer.Flush()
-	_ = f.file.Close()
+	if f.file != nil {
+		_ = f.writer.Flush()
+		_ = f.file.Close()
+	}
 }
 
 // Write 写入数据

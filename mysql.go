@@ -24,8 +24,8 @@ func newMysqlDao(user, password, address string, port int, dbname string) (dao, 
 		return nil, err
 	}
 	db.SetConnMaxLifetime(time.Minute * 3)
-	db.SetMaxOpenConns(15)
-	db.SetMaxIdleConns(15)
+	db.SetMaxOpenConns(20)
+	db.SetMaxIdleConns(20)
 	return &mysqlDao{db: db}, nil
 }
 
@@ -124,6 +124,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`)
 	if err != nil {
 		return err
 	}
+	defer stmt.Close()
 	_, err = stmt.Exec(room.Id, room.Liver.Uid, room.Liver.Uname, room.IsLive,
 		gm.Cmd, gm.Timestamp, gm.MedalLevel, gm.MedalUid, gm.MedalName,
 		gm.Uid, gm.Uname, gm.GiftId, gm.GiftName, gm.Price, gm.Num)
@@ -140,6 +141,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`)
 	if err != nil {
 		return err
 	}
+	defer stmt.Close()
 	_, err = stmt.Exec(room.Id, room.Liver.Uid, room.Liver.Uname, room.IsLive,
 		gm.Cmd, gm.Timestamp, gm.Uid, gm.Uname, gm.Name, gm.Price)
 	if err != nil {
@@ -156,6 +158,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`)
 	if err != nil {
 		return err
 	}
+	defer stmt.Close()
 	_, err = stmt.Exec(room.Id, room.Liver.Uid, room.Liver.Uname, room.IsLive,
 		em.Cmd, em.Timestamp, em.Uid, em.Uname,
 		em.MedalLevel, em.MedalUid, em.MedalName)
@@ -172,6 +175,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?);`)
 	if err != nil {
 		return err
 	}
+	defer stmt.Close()
 	_, err = stmt.Exec(room.Id, room.Liver.Uid, room.Liver.Uname, room.IsLive,
 		rfm.Cmd, rfm.Timestamp, rfm.Fans, rfm.FansClub)
 	if err != nil {
@@ -187,6 +191,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?);`)
 	if err != nil {
 		return err
 	}
+	defer stmt.Close()
 	_, err = stmt.Exec(room.Id, room.Liver.Uid, room.Liver.Uname, room.IsLive,
 		rcm.Cmd, rcm.Timestamp, rcm.Count)
 	if err != nil {
@@ -202,6 +207,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?);`)
 	if err != nil {
 		return err
 	}
+	defer stmt.Close()
 	_, err = stmt.Exec(room.Id, room.Liver.Uid, room.Liver.Uname, room.IsLive,
 		hrm.Cmd, hrm.Timestamp, hrm.Rank, hrm.Area)
 	if err != nil {
@@ -217,6 +223,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);`)
 	if err != nil {
 		return err
 	}
+	defer stmt.Close()
 	_, err = stmt.Exec(room.Id, room.Liver.Uid, room.Liver.Uname, room.IsLive,
 		rcm.Cmd, rcm.Timestamp, rcm.Title, rcm.AreaName, rcm.ParentAreaName)
 	if err != nil {
@@ -232,10 +239,15 @@ VALUES (?, ?, ?, ?, ?, ?, ?);`)
 	if err != nil {
 		return err
 	}
+	defer stmt.Close()
 	_, err = stmt.Exec(room.Id, room.Liver.Uid, room.Liver.Uname, room.IsLive,
 		wcm.Cmd, wcm.Timestamp, wcm.Num)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func (d *mysqlDao) Close() error {
+	return d.db.Close()
 }

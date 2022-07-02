@@ -2,15 +2,15 @@ package bilichat
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
-	"github.com/Hami-Lemon/bilichat/logger"
 	"net/http"
 	"net/url"
 	"strconv"
 	"time"
 
+	"github.com/Hami-Lemon/bilichat/logger"
 	"github.com/gorilla/websocket"
+	"github.com/pkg/errors"
 )
 
 const (

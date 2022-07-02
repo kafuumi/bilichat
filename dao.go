@@ -15,4 +15,5 @@ type dao interface {
 	insertHotRankMsg(room Room, hrm *HotRankMessage) error
 	insertRoomChangeMsg(room Room, rcm *RoomChangeMessage) error
 	insertWatchedChangeMsg(room Room, wcm *WatchedChangeMessage) error
+	Close() error
 }

@@ -12,6 +12,8 @@ import (
 const (
 	logFileSize    = 1024 * 128
 	danMuMsgBufCap = 256
+	mysqlName      = "mysql"
+	mongoDBName    = "mongodb"
 )
 
 var (
@@ -47,8 +49,8 @@ func ReadConfig(reader io.Reader) (Config, error) {
 		return Config{}, err
 	}
 	mainLogger.Info("监控的房间：%v", con.Rooms)
-	mainLogger.Info("database: user=%s, url=%s:%d, dbname=%s",
-		con.Database.User, con.Database.Address, con.Database.Port, con.Database.Dbname)
+	mainLogger.Info("database: name=%s, user=%s, url=%s:%d, dbname=%s",
+		con.Database.Name, con.Database.User, con.Database.Address, con.Database.Port, con.Database.Dbname)
 	mainLogger.Info("logger: level=%s, appender=%s", con.Log.Level, con.Log.Appender)
 	return con, nil
 }
@@ -96,8 +98,14 @@ func NewMonitor(c Config) *Monitor {
 
 	database := c.Database
 	var err error
-	m.dao, err = newMysqlDao(database.User, database.Password,
-		database.Address, database.Port, database.Dbname)
+	switch database.Name {
+	case mysqlName:
+		m.dao, err = newMysqlDao(database.User, database.Password,
+			database.Address, database.Port, database.Dbname)
+	case mongoDBName:
+		m.dao, err = newMongoDao(database.User, database.Password,
+			database.Address, database.Port, database.Dbname)
+	}
 	if err != nil {
 		mainLogger.Error("连接数据库失败：%v", err)
 		return nil
@@ -184,4 +192,7 @@ func (m *Monitor) Stop() {
 	}
 	logAppender.Close()
 	m.group.Wait()
+	if err := m.dao.Close(); err != nil {
+		mainLogger.Error("关闭数据库连接失败！%v", err)
+	}
 }
