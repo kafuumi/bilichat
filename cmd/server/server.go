@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -35,10 +36,27 @@ type Results struct {
 }
 
 func main() {
-	tempFile, _ := os.Open("./template.html")
+	tempFile, err := os.Open("./template.html")
+	if err != nil {
+		log.Fatalln(err)
+	}
 	sb := &strings.Builder{}
-	_, _ = io.Copy(sb, tempFile)
+	_, err = io.Copy(sb, tempFile)
+	if err != nil {
+		log.Fatalln(err)
+	}
 	_ = tempFile.Close()
+
+	indexFile, err := os.Open("./index.html")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	indexBuf := &bytes.Buffer{}
+	_, err = io.Copy(indexBuf, indexFile)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	_ = indexFile.Close()
 	temp := template.Must(template.New("result").Parse(sb.String()))
 	sb.Reset()
 	db := connectDB()
@@ -77,6 +95,14 @@ func main() {
 		}
 		if err = temp.Execute(writer, r); err != nil {
 			_, _ = writer.Write([]byte(err.Error()))
+		}
+	})
+
+	http.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
+		writer.Header().Set("Content-Type", "text/html")
+		_, err = io.Copy(writer, indexBuf)
+		if err != nil {
+			log.Printf("%v\n", err)
 		}
 	})
 	log.Println("开启服务")

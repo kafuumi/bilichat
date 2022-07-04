@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
+
+        .root {
+            width: 500px;
+            margin: 200px auto;
+        }
+
+        .root input {
+            width: 70%;
+            height: 50px;
+            border: 1px solid black;
+            border-radius: 12px;
+            font-size: 30px;
+        }
+
+        .root button {
+            width: 20%;
+            height: 52px;
+            border-radius: 12px;
+            border: 1px solid black;
+        }
+
+        .root h1 {
+            text-align: center;
+            margin-bottom: 33px;
+        }
+    </style>
+</head>
+<body>
+<div class="root">
+    <h1>输入uid</h1>
+    <div>
+        <label>
+            <input id="input" type="text">
+            <button id="button">开！</button>
+        </label>
+    </div>
+</div>
+<script>
+    input = document.getElementById("input")
+    button = document.getElementById("button")
+    button.onclick = function () {
+        location.href = "/get?uid=" + input.value
+    }
+</script>
+</body>
+</html>
