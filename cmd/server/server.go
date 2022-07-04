@@ -67,25 +67,29 @@ func main() {
 		uid, err := strconv.ParseInt(v.Get("uid"), 10, 64)
 		if err != nil {
 			_, _ = writer.Write([]byte(err.Error()))
+			return
 		}
 		danMuInfo, err := query(db, uid, "danMu", "danMuText")
 		if err != nil {
 			_, _ = writer.Write([]byte(err.Error()))
+			return
 		}
 		giftInfo, err := query(db, uid, "gift", "giftName")
 		if err != nil {
 			_, _ = writer.Write([]byte(err.Error()))
+			return
 
 		}
 		scInfo, err := query(db, uid, "sc", "scText")
 		if err != nil {
 			_, _ = writer.Write([]byte(err.Error()))
+			return
 
 		}
 		entryInfo, err := query(db, uid, "entry", "")
 		if err != nil {
 			_, _ = writer.Write([]byte(err.Error()))
-
+			return
 		}
 		r := Results{
 			DanMu: danMuInfo,
