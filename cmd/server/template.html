@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <title>查询结果</title>
+    <style>
+        table {
+            width: 80%;
+        }
+
+        table, tr, th, td {
+            border: 1px solid black;
+        }
+
+        table, th {
+            min-width: 100px;
+        }
+    </style>
+</head>
+<body>
+<h2>弹幕</h2>
+<table>
+    <tr>
+        <th>时间</th>
+        <th>主播</th>
+        <th>uid</th>
+        <th>用户名</th>
+        <th>cmd</th>
+        <th>msg</th>
+        <th>price</th>
+        <th>粉丝牌等级</th>
+        <th>粉丝牌</th>
+    </tr>
+    {{range .DanMu}}
+    <tr>
+        <td>{{.Datetime}}</td>
+        <td>{{.LiverUname}}</td>
+        <td>{{.Uid}}</td>
+        <td>{{.Uname}}</td>
+        <td>{{.Cmd}}</td>
+        <td>{{.Msg}}</td>
+        <td>{{.Price}}</td>
+        <td>{{.MedalLevel}}</td>
+        <td>{{.MedalName}}</td>
+    </tr>
+    {{end}}
+</table>
+
+<h2>SC</h2>
+<table>
+    <tr>
+        <th>时间</th>
+        <th>主播</th>
+        <th>uid</th>
+        <th>用户名</th>
+        <th>cmd</th>
+        <th>msg</th>
+        <th>price</th>
+        <th>粉丝牌等级</th>
+        <th>粉丝牌</th>
+    </tr>
+    {{range .SC}}
+    <tr>
+        <td>{{.Datetime}}</td>
+        <td>{{.LiverUname}}</td>
+        <td>{{.Uid}}</td>
+        <td>{{.Uname}}</td>
+        <td>{{.Cmd}}</td>
+        <td>{{.Msg}}</td>
+        <td>{{.Price}}</td>
+        <td>{{.MedalLevel}}</td>
+        <td>{{.MedalName}}</td>
+    </tr>
+    {{end}}
+</table>
+<h2>礼物</h2>
+<table>
+    <tr>
+        <th>时间</th>
+        <th>主播</th>
+        <th>uid</th>
+        <th>用户名</th>
+        <th>cmd</th>
+        <th>msg</th>
+        <th>price</th>
+        <th>粉丝牌等级</th>
+        <th>粉丝牌</th>
+    </tr>
+    {{range .Gift}}
+    <tr>
+        <td>{{.Datetime}}</td>
+        <td>{{.LiverUname}}</td>
+        <td>{{.Uid}}</td>
+        <td>{{.Uname}}</td>
+        <td>{{.Cmd}}</td>
+        <td>{{.Msg}}</td>
+        <td>{{.Price}}</td>
+        <td>{{.MedalLevel}}</td>
+        <td>{{.MedalName}}</td>
+    </tr>
+    {{end}}
+</table>
+<h2>进场消息</h2>
+<table>
+    <tr>
+        <th>时间</th>
+        <th>主播</th>
+        <th>uid</th>
+        <th>用户名</th>
+        <th>cmd</th>
+        <th>msg</th>
+        <th>price</th>
+        <th>粉丝牌等级</th>
+        <th>粉丝牌</th>
+    </tr>
+    {{range .Entry}}
+    <tr>
+        <td>{{.Datetime}}</td>
+        <td>{{.LiverUname}}</td>
+        <td>{{.Uid}}</td>
+        <td>{{.Uname}}</td>
+        <td>{{.Cmd}}</td>
+        <td>{{.Msg}}</td>
+        <td>{{.Price}}</td>
+        <td>{{.MedalLevel}}</td>
+        <td>{{.MedalName}}</td>
+    </tr>
+    {{end}}
+</table>
+</body>
+</html>

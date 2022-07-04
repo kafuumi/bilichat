@@ -91,3 +91,4 @@ fabric.properties
 ### Custom
 *.log
 cmd/bilichat/bilichat
+cmd/analyse
