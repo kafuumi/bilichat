@@ -100,13 +100,13 @@ func main() {
 
 	http.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
 		writer.Header().Set("Content-Type", "text/html")
-		_, err = io.Copy(writer, indexBuf)
+		_, err = writer.Write(indexBuf.Bytes())
 		if err != nil {
 			log.Printf("%v\n", err)
 		}
 	})
 	log.Println("开启服务")
-	log.Fatalln(http.ListenAndServe("localhost:80", nil))
+	log.Fatalln(http.ListenAndServe(":80", nil))
 }
 
 func query(db *mongo.Database, uid int64, col string, msgKey string) ([]*info, error) {
