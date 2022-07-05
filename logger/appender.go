@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-const bufSize = 1024 //日志文件的缓冲区大小
+const bufSize = 128 //日志文件的缓冲区大小
 var l = log.New(os.Stdout, "[Error]logger ", log.LstdFlags)
 
 //Appender 负责将日志内容写入指定的目的地，目的地可以是标准输出，也可以是文件
