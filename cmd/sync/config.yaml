@@ -1,0 +1,13 @@
+mysql:
+  user: carol
+  pass: mysqlcarol
+  addr: localhost
+  port: 3306
+  dbname: live_info
+mongo:
+  user: carol
+  pass: mongodbcarol
+  addr: localhost
+  port: 27017
+  dbname: liveInfo
+

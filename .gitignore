@@ -92,3 +92,4 @@ fabric.properties
 *.log
 cmd/bilichat/bilichat
 cmd/analyse
+cmd/sync/sync
